@@ -88,11 +88,10 @@ function handle_exit_val() {
     tool=$1
     exit_val=$2
     if [ $exit_val -eq 0 ]; then
-        echo -e "\e[32m$tool configuration done."
+        echo -e "\e[32m$tool configuration done.\e[0m"
     else
-        echo -e "\e[31m$tool configuration failed."
+        echo -e "\e[31m$tool configuration failed.\e[0m You may need to restart as root."
     fi
-    echo -e "\e[0m"
 }
 
 # gitconfig
@@ -147,16 +146,20 @@ function global_config() {
 function pipconf() {
     dir_pip=${HOME}/.config/pip
     mkdir -p $dir_pip
-    file=${dir_pip}/pip.conf
-    function func_grep() {
-        grep "proxy = http://"
-    }
-    sed_expr="s/proxy = http:\/\/.*[1-9]/proxy = ${proxy_sed}/g"
-    function func_proxy_not_set() {
-        echo "[global]"
-        echo "proxy = ${proxy}"
-    }
-    template $file "$sed_expr" func_grep func_proxy_not_set
+    if [ $? -eq 0 ]; then
+        file=${dir_pip}/pip.conf
+        function func_grep() {
+            grep "proxy = http://"
+        }
+        sed_expr="s/proxy = http:\/\/.*[1-9]/proxy = ${proxy_sed}/g"
+        function func_proxy_not_set() {
+            echo "[global]"
+            echo "proxy = ${proxy}"
+        }
+        template $file "$sed_expr" func_grep func_proxy_not_set
+    else
+        false
+    fi
     handle_exit_val "pip" $?
 }
 
@@ -164,20 +167,24 @@ function pipconf() {
 function dockerconf() {
     dir_file=/etc/systemd/system/docker.service.d
     mkdir -p $dir_file
-    file=${dir_file}/http-proxy.conf
-    function func_grep() {
-        grep -iE "http_proxy|https_proxy"
-    }
-    sed_expr="s/http:\/\/.*[1-9]/${proxy_sed}/g"
-    function func_proxy_not_set() {
-        echo "[Service]"
-        echo "Environment=\"HTTP_PROXY=${proxy}\""
-        echo "Environment=\"HTTPS_PROXY=${proxy}\""
-        echo "Environment=\"http_proxy=${proxy}\""
-        echo "Environment=\"https_proxy=${proxy}\""
-        echo "Environment=\"NO_PROXY=localhost,127.0.0.0/8\""
-    }
-    template $file "$sed_expr" func_grep func_proxy_not_set
+    if [ $? -eq 0 ]; then
+        file=${dir_file}/http-proxy.conf
+        function func_grep() {
+            grep -iE "http_proxy|https_proxy"
+        }
+        sed_expr="s/http:\/\/.*[1-9]/${proxy_sed}/g"
+        function func_proxy_not_set() {
+            echo "[Service]"
+            echo "Environment=\"HTTP_PROXY=${proxy}\""
+            echo "Environment=\"HTTPS_PROXY=${proxy}\""
+            echo "Environment=\"http_proxy=${proxy}\""
+            echo "Environment=\"https_proxy=${proxy}\""
+            echo "Environment=\"NO_PROXY=localhost,127.0.0.0/8\""
+        }
+        template $file "$sed_expr" func_grep func_proxy_not_set
+    else
+        false
+    fi
     handle_exit_val "docker" $?
     echo "You may want to restart docker after exiting the program:"
     echo -e "\e[1msudo systemctl daemon-reload"
