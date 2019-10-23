@@ -49,7 +49,6 @@ function template() {
     sed_expr=$2
     func_grep=$3
     func_proxy_not_set=$4
-    exit_val=0
 
     echo "Does $file exists?"
     ls $file &>/dev/null
@@ -69,10 +68,6 @@ function template() {
             echo "Yes."
             echo "Updating proxy."
             cat $file | sed -i.proxybak "${sed_expr}" $file
-            if [ $? -ne 0 ]; then
-                echo -e "\e[31mCommand failed.\e[0m You may need to restart as root."
-                exit_val=1
-            fi
         else
             echo "No."
             echo "Setting proxy."
@@ -81,17 +76,18 @@ function template() {
             } >>$file
         fi
     fi
-    return $exit_val
+    return $?
 }
 
 function handle_exit_val() {
     tool=$1
     exit_val=$2
     if [ $exit_val -eq 0 ]; then
-        echo -e "\e[32m$tool configuration done.\e[0m"
+        echo -e "\e[32m$tool configuration done."
     else
-        echo -e "\e[31m$tool configuration failed.\e[0m You may need to restart as root."
+        echo -e "\e[31m$tool configuration failed. You may need to restart as root."
     fi
+    echo -e "\e[0m"
 }
 
 # gitconfig
