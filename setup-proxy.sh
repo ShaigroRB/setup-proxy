@@ -2,7 +2,7 @@
 
 host="HOST"
 port="PORT"
-nni="NNI"
+username="USERNAME"
 passwd="PASSWORD"
 
 proxy="PROXY"
@@ -20,7 +20,7 @@ function help() {
     echo "help: display this help"
     echo "clear: clear the screen"
     echo "files: display files which will be modified by the following commands"
-    echo "proxy: set host, port, nni, password and proxy"
+    echo "proxy: set host, port, username, password and proxy"
     echo "global: set proxy for global configuration (root)"
     echo "docker: set proxy for docker (root)"
     echo "pip: set proxy for pip"
@@ -37,11 +37,11 @@ function help() {
 function set_proxy() {
     read -p "What is the host?: " host
     read -p "What is the port?: " port
-    read -p "What is the NNI?: " nni
+    read -p "What is the username?: " username
     read -s -p "What is the password?: " passwd
     echo ""
-    proxy_sed="http:\/\/${nni}:${passwd}@${host}:${port}"
-    proxy="http://${nni}:${passwd}@${host}:${port}"
+    proxy_sed="http:\/\/${username}:${passwd}@${host}:${port}"
+    proxy="http://${username}:${passwd}@${host}:${port}"
 }
 
 # template function
@@ -219,7 +219,7 @@ function hgconfig() {
     echo "vim .hgrc"
     echo "[http_proxy]"
     echo -e "host=\e[1m${host}\e[0m:\e[1m${port}\e[0m"
-    echo -e "user=\e[1m${nni}\e[0m"
+    echo -e "user=\e[1m${username}\e[0m"
     echo -e "passwd=\e[1m${passwd}\e[0m"
     echo ""
 }
@@ -238,7 +238,7 @@ vim settings.xml
 #            <protocol>http</protocol>
 #            <host>\e[1m${host}\e[0m</host>
 #            <port>\e[1m${port}\e[0m</port>
-#            <username>\e[1m${nni}\e[0m</username>
+#            <username>\e[1m${username}\e[0m</username>
 #            <password>\e[1m${passwd}\e[0m</password>
 #            <nonProxyHosts>localhost|.other-domain.com</nonProxyHosts>
 #        </proxy>
