@@ -25,6 +25,7 @@ function help() {
     echo "docker: set proxy for docker (root)"
     echo "pip: set proxy for pip"
     echo "git: set proxy for git"
+    echo "yum: set proxy for yum (root)"
     echo "hg: display help on how to do it (not implemented)"
     echo "mvn: display help on how to do it (not implemented)"
     echo "svn: display help on how to do it (not implemented)"
@@ -187,6 +188,21 @@ function dockerconf() {
     echo -e "sudo systemctl restart docker\e[0m"
 }
 
+
+# yum
+function yumconfig() {
+    conffile=/etc/yum.conf
+    sed_expr="s/proxy = \".*\"/proxy = \"${proxy_sed}\"/g"
+    function func_grep() {
+        grep "proxy"
+    }
+    function func_proxy_not_set() {
+        echo "proxy = ${proxy}"
+    }
+    template $conffile "$sed_expr" func_grep func_proxy_not_set
+    handle_exit_val "yum" $?
+}
+
 function not_implemented() {
     tool=$1
     echo ""
@@ -246,6 +262,7 @@ function modified_files() {
     echo -e "docker: modify \e[1m/etc/systemd/system/docker.service.d/http-proxy.conf\e[0m"
     echo -e "pip: modify \e[1m\${HOME}/.config/pip/pip.conf\e[0m"
     echo -e "git: modify \e[1m\${HOME}/.gitconfig\e[0m"
+    echo -e "yum: modify \e[1m/etc/yum.conf\e[0m"
     echo -e "hg: manually modify \e[1m\${HOME}/.hgrc\e[0m"
     echo -e "mvn: manually modify \e[1m\${HOME}/.m2/settings.xml\e[0m"
     echo -e "svn: manually modify \e[1m\${HOME}/.subversion/servers\e[0m"
@@ -267,6 +284,7 @@ function command_line() {
         "docker") dockerconf ;;
         "pip") pipconf ;;
         "git") gitconfig ;;
+        "yum") yumconfig ;;
         "hg") hgconfig ;;
         "mvn") mvnconfig ;;
         "svn") svnconfig ;;
