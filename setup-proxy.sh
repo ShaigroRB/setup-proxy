@@ -2,7 +2,7 @@
 
 host="HOST"
 port="PORT"
-nni="NNI"
+username="USERNAME"
 passwd="PASSWORD"
 
 proxy="PROXY"
@@ -20,11 +20,12 @@ function help() {
     echo "help: display this help"
     echo "clear: clear the screen"
     echo "files: display files which will be modified by the following commands"
-    echo "proxy: set host, port, nni, password and proxy"
+    echo "proxy: set host, port, username, password and proxy"
     echo "global: set proxy for global configuration (root)"
     echo "docker: set proxy for docker (root)"
     echo "pip: set proxy for pip"
     echo "git: set proxy for git"
+    echo "yum: set proxy for yum (root)"
     echo "hg: display help on how to do it (not implemented)"
     echo "mvn: display help on how to do it (not implemented)"
     echo "svn: display help on how to do it (not implemented)"
@@ -36,11 +37,11 @@ function help() {
 function set_proxy() {
     read -p "What is the host?: " host
     read -p "What is the port?: " port
-    read -p "What is the NNI?: " nni
+    read -p "What is the username?: " username
     read -s -p "What is the password?: " passwd
     echo ""
-    proxy_sed="http:\/\/${nni}:${passwd}@${host}:${port}"
-    proxy="http://${nni}:${passwd}@${host}:${port}"
+    proxy_sed="http:\/\/${username}:${passwd}@${host}:${port}"
+    proxy="http://${username}:${passwd}@${host}:${port}"
 }
 
 # template function
@@ -187,6 +188,21 @@ function dockerconf() {
     echo -e "sudo systemctl restart docker\e[0m"
 }
 
+
+# yum
+function yumconfig() {
+    conffile=/etc/yum.conf
+    sed_expr="s/proxy = \".*\"/proxy = \"${proxy_sed}\"/g"
+    function func_grep() {
+        grep "proxy"
+    }
+    function func_proxy_not_set() {
+        echo "proxy = ${proxy}"
+    }
+    template $conffile "$sed_expr" func_grep func_proxy_not_set
+    handle_exit_val "yum" $?
+}
+
 function not_implemented() {
     tool=$1
     echo ""
@@ -203,7 +219,7 @@ function hgconfig() {
     echo "vim .hgrc"
     echo "[http_proxy]"
     echo -e "host=\e[1m${host}\e[0m:\e[1m${port}\e[0m"
-    echo -e "user=\e[1m${nni}\e[0m"
+    echo -e "user=\e[1m${username}\e[0m"
     echo -e "passwd=\e[1m${passwd}\e[0m"
     echo ""
 }
@@ -222,7 +238,7 @@ vim settings.xml
 #            <protocol>http</protocol>
 #            <host>\e[1m${host}\e[0m</host>
 #            <port>\e[1m${port}\e[0m</port>
-#            <username>\e[1m${nni}\e[0m</username>
+#            <username>\e[1m${username}\e[0m</username>
 #            <password>\e[1m${passwd}\e[0m</password>
 #            <nonProxyHosts>localhost|.other-domain.com</nonProxyHosts>
 #        </proxy>
@@ -246,6 +262,7 @@ function modified_files() {
     echo -e "docker: modify \e[1m/etc/systemd/system/docker.service.d/http-proxy.conf\e[0m"
     echo -e "pip: modify \e[1m\${HOME}/.config/pip/pip.conf\e[0m"
     echo -e "git: modify \e[1m\${HOME}/.gitconfig\e[0m"
+    echo -e "yum: modify \e[1m/etc/yum.conf\e[0m"
     echo -e "hg: manually modify \e[1m\${HOME}/.hgrc\e[0m"
     echo -e "mvn: manually modify \e[1m\${HOME}/.m2/settings.xml\e[0m"
     echo -e "svn: manually modify \e[1m\${HOME}/.subversion/servers\e[0m"
@@ -267,6 +284,7 @@ function command_line() {
         "docker") dockerconf ;;
         "pip") pipconf ;;
         "git") gitconfig ;;
+        "yum") yumconfig ;;
         "hg") hgconfig ;;
         "mvn") mvnconfig ;;
         "svn") svnconfig ;;
